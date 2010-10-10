@@ -102,20 +102,45 @@ class Elicit:
   def palette_view_delete_color(self, palette_view, color):
     self.palette.remove(color)
 
+  def wheel_changed(self, wheel):
+    h, s, v = wheel.get_color()
+    h = h * 360.
+    h_o, s_o, v_o = self.color.hsv()
+    if h_o != h or s_o != s or v_o != v:
+      self.color.set_hsv(h, s, v)
+
   def color_name_entry_changed(self, color_name_entry):
     if self.palette and self.palette_view.selected:
       self.palette_view.selected.name = color_name_entry.get_text()
 
   def color_changed(self, color):
+    for type in 'r', 'g', 'b', 'h', 's', 'v':
+      self.colorspin[type].handler_block(self.h_ids[type])
+
+    self.hex_entry.handler_block(self.h_ids['hex'])
+    self.wheel.handler_block(self.h_ids['wheel'])
+
     self.colorspin['r'].set_value(self.color.r)
     self.colorspin['g'].set_value(self.color.g)
     self.colorspin['b'].set_value(self.color.b)
+
     self.colorspin['h'].set_value(self.color.h)
     self.colorspin['s'].set_value(self.color.s)
     self.colorspin['v'].set_value(self.color.v)
+
     self.hex_entry.set_text(self.color.hex())
+
+    h, s, v = color.hsv()
+    self.wheel.set_color(h / 360., s, v)
+    # self.colorpicker.
+
     if self.palette_view.selected and color.hex() != self.palette_view.selected.hex():
       self.palette_view.select(None)
+
+    for type in 'r', 'g', 'b', 'h', 's', 'v':
+      self.colorspin[type].handler_unblock(self.h_ids[type])
+    self.hex_entry.handler_unblock(self.h_ids['hex'])
+    self.wheel.handler_unblock(self.h_ids['wheel'])
 
   def color_spin_rgb_changed(self, spin):
     r,g,b = self.color.rgb()
@@ -246,7 +271,6 @@ class Elicit:
 
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
-    vbox.pack_start(frame, True, True)
 
     self.mag = Magnifier()
     frame.add(self.mag)
@@ -256,12 +280,29 @@ class Elicit:
     self.mag.connect('location-changed', self.mag_location_changed)
 
     hbox = gtk.HBox(False, 0)
-    vbox.pack_start(hbox, False)
 
     self.mag_label = gtk.Label()
     hbox.pack_start(self.mag_label, False)
 
     icon_path = os.path.join(os.path.dirname(__file__), 'data', 'icons')
+
+    frame_wheel = gtk.Frame()
+    self.notebook = gtk.Notebook()
+    frame_label = gtk.Image()
+    frame_label.set_from_file(os.path.join(icon_path, "magnify-button.png"));
+    # TODO: Color Wheel image (from Gimp picker?)
+    frame_wheel_label = gtk.Label('Color Wheel')
+    self.notebook.append_page(frame, frame_label)
+    self.notebook.append_page(frame_wheel, frame_wheel_label)
+    self.wheel = gtk.HSV()
+    # TODO: automatic resize
+    self.wheel.set_metrics(200, 20)
+    frame_wheel.add(self.wheel)
+    self.h_ids['wheel'] = self.wheel.connect('changed', self.wheel_changed)
+
+    vbox.pack_start(self.notebook, True, True)
+    vbox.pack_start(hbox, False)
+
 
     button = gtk.Button()
     button.set_relief(gtk.RELIEF_NONE)
@@ -330,7 +371,7 @@ class Elicit:
       spin = gtk.SpinButton()
       spin.set_range(0,255)
       spin.set_increments(1,10)
-      spin.connect('value-changed', self.color_spin_rgb_changed)
+      self.h_ids[type] = spin.connect('value-changed', self.color_spin_rgb_changed)
       table.attach(spin, 1,2,row,row+1,gtk.FILL,gtk.EXPAND,2,2)
       self.colorspin[type] = spin
       row += 1
@@ -347,7 +388,7 @@ class Elicit:
         spin.set_digits(2)
         spin.set_range(0,1.0)
         spin.set_increments(.01,.1)
-      spin.connect('value-changed', self.color_spin_hsv_changed)
+      self.h_ids[type] = spin.connect('value-changed', self.color_spin_hsv_changed)
       table.attach(spin, 3,4,row,row+1,gtk.FILL,gtk.EXPAND,2,2)
       self.colorspin[type] = spin
       row += 1
@@ -356,8 +397,10 @@ class Elicit:
     table.attach(self.hex_label,0,1,3,4,gtk.FILL,gtk.EXPAND,2,2)
 
     self.hex_entry = gtk.Entry()
+    self.hex_entry.set_max_length(7)
+    self.hex_entry.set_width_chars(7)
     table.attach(self.hex_entry,1,4,3,4,gtk.FILL,gtk.EXPAND,2,2)
-    self.hex_entry.connect('changed', self.hex_entry_changed)
+    self.h_ids['hex'] = self.hex_entry.connect('changed', self.hex_entry_changed)
 
 
     sep = gtk.HSeparator()
@@ -494,6 +537,7 @@ class Elicit:
   def __init__(self):
     self.palette = None
     self.color = Color()
+    self.h_ids = {}
     self.color.connect('changed', self.color_changed)
 
     self.init_config()
