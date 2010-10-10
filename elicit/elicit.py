@@ -28,6 +28,14 @@ except ImportError:
   print "Numeric Python (numpy) is required."
   raise SystemExit
 
+# TODO:
+# CMYK actual code (pychrom)
+# Color Wheel automatic resize
+# Color Wheel tab icon
+# NameThatColor
+# Terminal name
+# Refresh after zoom in/out
+
 class Elicit:
 
   def save(self):
@@ -132,7 +140,6 @@ class Elicit:
 
     h, s, v = color.hsv()
     self.wheel.set_color(h / 360., s, v)
-    # self.colorpicker.
 
     if self.palette_view.selected and color.hex() != self.palette_view.selected.hex():
       self.palette_view.select(None)
@@ -151,6 +158,10 @@ class Elicit:
     elif spin == self.colorspin['b']:
       b = spin.get_value()
     self.color.set_rgb(r,g,b)
+
+  def color_spin_cmyk_changed(self, spin):
+    # TODO
+    pass
 
   def color_spin_hsv_changed(self, spin):
     h,s,v = self.color.hsv()
@@ -263,17 +274,22 @@ class Elicit:
     self.win.set_icon_name('rephorm-elicit')
     self.win.connect('destroy', self.quit, None)
 
-    vbox = gtk.VBox(False, 2)
-    self.win.add(vbox)
+    main_vbox = gtk.VBox(False, 2)
+    self.win.add(main_vbox)
 
     menubar = self.build_menu()
-    vbox.pack_start(menubar, False)
+    main_vbox.pack_start(menubar, False)
 
-    frame = gtk.Frame()
-    frame.set_shadow_type(gtk.SHADOW_IN)
+    frame_mag = gtk.Frame()
+    # frame_mag.set_shadow_type(gtk.SHADOW_IN)
 
+    frame_mag_inner = gtk.Frame()
+    frame_mag_inner.set_shadow_type(gtk.SHADOW_IN)
     self.mag = Magnifier()
-    frame.add(self.mag)
+    frame_mag_inner.add(self.mag)
+    mag_vbox = gtk.VBox()
+    mag_vbox.pack_start(frame_mag_inner)
+    frame_mag.add(mag_vbox)
     self.mag.connect('zoom-changed', self.mag_zoom_changed)
     self.mag.connect('grid-toggled', self.mag_grid_toggled)
     self.mag.connect('measure-changed', self.mag_measure_changed)
@@ -288,11 +304,11 @@ class Elicit:
 
     frame_wheel = gtk.Frame()
     self.notebook = gtk.Notebook()
-    frame_label = gtk.Image()
-    frame_label.set_from_file(os.path.join(icon_path, "magnify-button.png"));
+    frame_mag_label = gtk.Image()
+    frame_mag_label.set_from_file(os.path.join(icon_path, "magnify-button.png"));
     # TODO: Color Wheel image (from Gimp picker?)
     frame_wheel_label = gtk.Label('Color Wheel')
-    self.notebook.append_page(frame, frame_label)
+    self.notebook.append_page(frame_mag, frame_mag_label)
     self.notebook.append_page(frame_wheel, frame_wheel_label)
     self.wheel = gtk.HSV()
     # TODO: automatic resize
@@ -300,10 +316,11 @@ class Elicit:
     frame_wheel.add(self.wheel)
     self.h_ids['wheel'] = self.wheel.connect('changed', self.wheel_changed)
 
-    vbox.pack_start(self.notebook, True, True)
-    vbox.pack_start(hbox, False)
+    main_vbox.pack_start(self.notebook, True, True)
+    mag_vbox.pack_start(hbox, False)
 
 
+    pick_view_hbox = gtk.HBox()
     button = gtk.Button()
     button.set_relief(gtk.RELIEF_NONE)
     img = gtk.Image()
@@ -311,7 +328,8 @@ class Elicit:
     button.set_image(img)
     button.set_tooltip_text("Start Selecting Color\n(Left Click to stop)")
     button.connect('clicked', self.select_color_clicked);
-    hbox.pack_end(button, False)
+    pick_view_hbox.pack_start(button, False)
+    main_vbox.pack_start(pick_view_hbox)
 
     button = gtk.Button()
     button.set_relief(gtk.RELIEF_NONE)
@@ -327,7 +345,7 @@ class Elicit:
 
 
     hbox = gtk.HBox(False, 5)
-    vbox.pack_start(hbox, False)
+    mag_vbox.pack_start(hbox, False)
 
     check = gtk.CheckButton("Show Grid")
     check.set_active(self.mag.show_grid)
@@ -348,11 +366,11 @@ class Elicit:
 
 
     hbox = gtk.HBox(False, 5)
-    vbox.pack_start(hbox, False)
+    main_vbox.pack_start(hbox, False)
 
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
-    hbox.pack_start(frame, True, True)
+    pick_view_hbox.pack_end(frame, True, True)
 
     self.colorpicker = ColorPicker()
     frame.add(self.colorpicker)
@@ -361,7 +379,7 @@ class Elicit:
 
     self.colorspin = {}
     # add RGB spinboxes
-    table = gtk.Table(4,4)
+    table = gtk.Table(6,4)
     hbox.pack_start(table, False)
 
     row = 0
@@ -393,22 +411,34 @@ class Elicit:
       self.colorspin[type] = spin
       row += 1
 
+    row = 0
+    for type in ("c","m","y", "k"):
+      label = gtk.Label(type.upper())
+      table.attach(label, 4,5,row,row+1,0,0,2,2)
+      spin = gtk.SpinButton()
+      spin.set_range(0,100)
+      spin.set_increments(1, 10)
+      self.h_ids[type] = spin.connect('value-changed', self.color_spin_cmyk_changed)
+      table.attach(spin, 5,6,row,row+1,gtk.FILL,gtk.EXPAND,2,2)
+      self.colorspin[type] = spin
+      row += 1
+
     self.hex_label = gtk.Label("Hex")
     table.attach(self.hex_label,0,1,3,4,gtk.FILL,gtk.EXPAND,2,2)
 
     self.hex_entry = gtk.Entry()
     self.hex_entry.set_max_length(7)
-    self.hex_entry.set_width_chars(7)
+    # self.hex_entry.set_width_chars(7)
     table.attach(self.hex_entry,1,4,3,4,gtk.FILL,gtk.EXPAND,2,2)
     self.h_ids['hex'] = self.hex_entry.connect('changed', self.hex_entry_changed)
 
 
     sep = gtk.HSeparator()
-    vbox.pack_start(sep, False)
+    main_vbox.pack_start(sep, False)
 
     # palette tools
     hbox = gtk.HBox(False, 5)
-    vbox.pack_start(hbox, False)
+    main_vbox.pack_start(hbox, False)
 
     # Palette tools
     hbox.pack_start(gtk.Label("Palette:"), False)
@@ -435,7 +465,7 @@ class Elicit:
     # palette view
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
-    vbox.pack_start(frame, False)
+    main_vbox.pack_start(frame, False)
 
     self.palette_view = PaletteView()
     self.palette_view.connect('select-color', self.palette_view_select_color)
@@ -444,7 +474,7 @@ class Elicit:
 
     # color name entry / palette tools
     hbox = gtk.HBox(False, 5)
-    vbox.pack_start(hbox, False)
+    main_vbox.pack_start(hbox, False)
 
     hbox.pack_start(gtk.Label("Color Name:"), False)
 
