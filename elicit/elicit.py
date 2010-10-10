@@ -139,9 +139,10 @@ class Elicit:
 
   def hex_entry_changed(self, entry):
     text = entry.get_text()
-    if ((text[0] == '#' and len(text) == 7) or
-        (text[0] != '#' and len(text) == 6)):
-      self.color.set_hex(text)
+    if text != '':
+      if ((text[0] == '#' and len(text) == 7) or
+          (text[0] != '#' and len(text) == 6)):
+        self.color.set_hex(text)
 
   def palette_combo_selected(self, combo, palette):
     if (self.palette != palette):
