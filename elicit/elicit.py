@@ -518,3 +518,8 @@ class Elicit:
     self.colorpicker.set_color(self.color)
 
     self.load_config()
+
+if __name__ == "__main__":
+  el = Elicit()
+  el.show()
+  el.main()
