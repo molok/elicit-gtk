@@ -303,10 +303,10 @@ class Elicit:
     self.win.add(w_vbox)
 
     frame_mag = gtk.Frame()
-    # frame_mag.set_shadow_type(gtk.SHADOW_IN)
+    frame_mag.set_shadow_type(gtk.SHADOW_NONE)
 
     frame_mag_inner = gtk.Frame()
-    frame_mag_inner.set_shadow_type(gtk.SHADOW_IN)
+    frame_mag_inner.set_shadow_type(gtk.SHADOW_ETCHED_IN)
     self.mag = Magnifier()
     frame_mag_inner.add(self.mag)
     mag_vbox = gtk.VBox()
@@ -325,16 +325,18 @@ class Elicit:
     icon_path = os.path.join(os.path.dirname(__file__), 'data', 'icons')
 
     frame_wheel = gtk.Frame()
+    frame_wheel.set_shadow_type(gtk.SHADOW_NONE)
     self.notebook = gtk.Notebook()
     frame_mag_label = gtk.Image()
     frame_mag_label.set_from_file(os.path.join(icon_path, "magnify-16.png"));
     frame_wheel_label = gtk.Image()
     frame_wheel_label.set_from_file(os.path.join(icon_path, "color-wheel-16.png"));
+    frame_wheel.connect('size-allocate', self.wheel_size_allocate)
     self.notebook.append_page(frame_mag, frame_mag_label)
     self.notebook.append_page(frame_wheel, frame_wheel_label)
     self.wheel = gtk.HSV()
     # TODO: automatic resize
-    self.wheel.set_metrics(200, 20)
+    # self.wheel.set_metrics(200, 20)
     frame_wheel.add(self.wheel)
     self.h_ids['wheel'] = self.wheel.connect('changed', self.wheel_changed)
 
@@ -532,6 +534,19 @@ class Elicit:
     if index == None:
       index = 0
     self.palette_combo.select(index)
+
+  def wheel_size_allocate(self, frame, allocation):
+    # FIXME: this kinda breaks resize
+    # code from GIMP
+    style = frame.get_style()
+    focus_width = frame.style_get_property('focus-line-width')
+    focus_padding = frame.style_get_property('focus-padding')
+    size = (min (allocation.width, allocation.height) - 
+            2 * max (style.xthickness, style.ythickness) -
+            2 * (focus_width + focus_padding))
+
+    # print 'SIZE', size, size / 10
+    self.wheel.set_metrics(size, size / 10)
 
   def config_changed(self, client, gconf_id, entry, user_data):
     key = entry.key[13:]
