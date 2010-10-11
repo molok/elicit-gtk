@@ -332,11 +332,10 @@ class Elicit:
     frame_wheel_label = gtk.Image()
     frame_wheel_label.set_from_file(os.path.join(icon_path, "color-wheel-16.png"));
     frame_wheel.connect('size-allocate', self.wheel_size_allocate)
+    frame_wheel.connect('size-request', self.wheel_size_request)
     self.notebook.append_page(frame_mag, frame_mag_label)
     self.notebook.append_page(frame_wheel, frame_wheel_label)
     self.wheel = gtk.HSV()
-    # TODO: automatic resize
-    # self.wheel.set_metrics(200, 20)
     frame_wheel.add(self.wheel)
     self.h_ids['wheel'] = self.wheel.connect('changed', self.wheel_changed)
 
@@ -536,8 +535,6 @@ class Elicit:
     self.palette_combo.select(index)
 
   def wheel_size_allocate(self, frame, allocation):
-    # FIXME: this kinda breaks resize
-    # code from GIMP
     style = frame.get_style()
     focus_width = frame.style_get_property('focus-line-width')
     focus_padding = frame.style_get_property('focus-padding')
@@ -545,8 +542,14 @@ class Elicit:
             2 * max (style.xthickness, style.ythickness) -
             2 * (focus_width + focus_padding))
 
-    # print 'SIZE', size, size / 10
-    self.wheel.set_metrics(size, size / 10)
+    self.wheel.set_metrics(int(size), int(size / 10))
+
+  def wheel_size_request(self, frame, requisition):
+    style = frame.get_style()
+    focus_width = frame.style_get_property('focus-line-width')
+    focus_padding = frame.style_get_property('focus-padding')
+    requisition.width = 2 * (focus_width + focus_padding)
+    requisition.height = 2 * (focus_width + focus_padding)
 
   def config_changed(self, client, gconf_id, entry, user_data):
     key = entry.key[13:]
