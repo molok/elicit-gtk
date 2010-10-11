@@ -35,6 +35,7 @@ except ImportError:
 # NameThatColor
 # Terminal name
 # Refresh after zoom in/out
+# tab order
 
 class Elicit:
 
@@ -275,10 +276,14 @@ class Elicit:
     self.win.connect('destroy', self.quit, None)
 
     main_vbox = gtk.VBox(False, 2)
-    self.win.add(main_vbox)
 
     menubar = self.build_menu()
-    main_vbox.pack_start(menubar, False)
+    w_vbox = gtk.VBox()
+    w_vbox.pack_start(menubar, False)
+    w_vbox.pack_end(main_vbox, True)
+    # main_vbox.pack_start(menubar, False)
+    main_vbox.set_border_width(7)
+    self.win.add(w_vbox)
 
     frame_mag = gtk.Frame()
     # frame_mag.set_shadow_type(gtk.SHADOW_IN)
@@ -380,7 +385,7 @@ class Elicit:
     self.colorspin = {}
     # add RGB spinboxes
     table = gtk.Table(6,4)
-    hbox.pack_start(table, False)
+    hbox.pack_start(table, True)
 
     row = 0
     for type in ("r","g","b"):
@@ -390,7 +395,7 @@ class Elicit:
       spin.set_range(0,255)
       spin.set_increments(1,10)
       self.h_ids[type] = spin.connect('value-changed', self.color_spin_rgb_changed)
-      table.attach(spin, 1,2,row,row+1,gtk.FILL,gtk.EXPAND,2,2)
+      table.attach(spin, 1,2,row,row+1,gtk.FILL|gtk.EXPAND,0,2,2)
       self.colorspin[type] = spin
       row += 1
 
@@ -407,7 +412,7 @@ class Elicit:
         spin.set_range(0,1.0)
         spin.set_increments(.01,.1)
       self.h_ids[type] = spin.connect('value-changed', self.color_spin_hsv_changed)
-      table.attach(spin, 3,4,row,row+1,gtk.FILL,gtk.EXPAND,2,2)
+      table.attach(spin, 3,4,row,row+1,gtk.FILL|gtk.EXPAND,0,2,2)
       self.colorspin[type] = spin
       row += 1
 
@@ -419,17 +424,17 @@ class Elicit:
       spin.set_range(0,100)
       spin.set_increments(1, 10)
       self.h_ids[type] = spin.connect('value-changed', self.color_spin_cmyk_changed)
-      table.attach(spin, 5,6,row,row+1,gtk.FILL,gtk.EXPAND,2,2)
+      table.attach(spin, 5,6,row,row+1,gtk.FILL|gtk.EXPAND,0,2,2)
       self.colorspin[type] = spin
       row += 1
 
     self.hex_label = gtk.Label("Hex")
-    table.attach(self.hex_label,0,1,3,4,gtk.FILL,gtk.EXPAND,2,2)
+    table.attach(self.hex_label,0,1,3,4,0,0,2,2)
 
     self.hex_entry = gtk.Entry()
     self.hex_entry.set_max_length(7)
     # self.hex_entry.set_width_chars(7)
-    table.attach(self.hex_entry,1,4,3,4,gtk.FILL,gtk.EXPAND,2,2)
+    table.attach(self.hex_entry,1,4,3,4,gtk.FILL|gtk.EXPAND,0,2,2)
     self.h_ids['hex'] = self.hex_entry.connect('changed', self.hex_entry_changed)
 
 
