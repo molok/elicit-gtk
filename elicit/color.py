@@ -122,6 +122,42 @@ class Color(gobject.GObject):
 
     self.set_rgb(r,g,b)
 
+  # TODO: this code is from pychrom, I'm not so sure about its correctness.
+  # TODO: I should probably set self.{c,m,y,k}
+  def set_cmyk(self, c, m, y, k):
+    d = k / 100.0
+    f = (1.0 - d) / 100.0
+
+    r = int(255.0 * (1.0 - c * f - d))
+    g = int(255.0 * (1.0 - m * f - d))
+    b = int(255.0 * (1.0 - y * f - d))
+
+    self.set_rgb(r, g, b)
+
+  def cmyk(self):
+    r, g, b = self.rgb()
+    f = 1.0/255
+    r *= f
+    g *= f
+    b *= f
+    k = min(1 - r, 1 - g, 1 - b)
+    if k < 1:
+      d = 1 - k
+      c = (d - r) / d
+      m = (d - g) / d
+      y = (d - b) / d
+    else:
+      c = 0
+      m = 0
+      y = 0
+
+    c = int(100 * c)
+    m = int(100 * m)
+    y = int(100 * y)
+    k = int(100 * k)
+
+    return c, m, y, k
+
   def rgb(self):
     """Return the color as a triple of 8 bit integers, (r,g,b)"""
     return (self.r, self.g, self.b)

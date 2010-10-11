@@ -36,6 +36,8 @@ except ImportError:
 # Terminal name
 # Refresh after zoom in/out
 # tab order
+# it's hard to use right click with a touchpad with
+# only one button!
 
 class Elicit:
 
@@ -123,7 +125,7 @@ class Elicit:
       self.palette_view.selected.name = color_name_entry.get_text()
 
   def color_changed(self, color):
-    for type in 'r', 'g', 'b', 'h', 's', 'v':
+    for type in 'r', 'g', 'b', 'h', 's', 'v', 'c', 'm', 'y', 'k':
       self.colorspin[type].handler_block(self.h_ids[type])
 
     self.hex_entry.handler_block(self.h_ids['hex'])
@@ -137,6 +139,13 @@ class Elicit:
     self.colorspin['s'].set_value(self.color.s)
     self.colorspin['v'].set_value(self.color.v)
 
+    # TODO: I should probably use self.color.{c,m,y,k}
+    c, m, y, k = self.color.cmyk()
+    self.colorspin['c'].set_value(c)
+    self.colorspin['m'].set_value(m)
+    self.colorspin['y'].set_value(y)
+    self.colorspin['k'].set_value(k)
+
     self.hex_entry.set_text(self.color.hex())
 
     h, s, v = color.hsv()
@@ -145,7 +154,7 @@ class Elicit:
     if self.palette_view.selected and color.hex() != self.palette_view.selected.hex():
       self.palette_view.select(None)
 
-    for type in 'r', 'g', 'b', 'h', 's', 'v':
+    for type in 'r', 'g', 'b', 'h', 's', 'v', 'c', 'm', 'y', 'k':
       self.colorspin[type].handler_unblock(self.h_ids[type])
     self.hex_entry.handler_unblock(self.h_ids['hex'])
     self.wheel.handler_unblock(self.h_ids['wheel'])
@@ -161,8 +170,16 @@ class Elicit:
     self.color.set_rgb(r,g,b)
 
   def color_spin_cmyk_changed(self, spin):
-    # TODO
-    pass
+    c, m, y, k = self.color.cmyk()
+    if spin == self.colorspin['c']:
+      c = spin.get_value()
+    elif spin == self.colorspin['m']:
+      m = spin.get_value()
+    elif spin == self.colorspin['y']:
+      y = spin.get_value()
+    elif spin == self.colorspin['k']:
+      k = spin.get_value()
+    self.color.set_cmyk(c, m, y, k)
 
   def color_spin_hsv_changed(self, spin):
     h,s,v = self.color.hsv()
@@ -323,6 +340,7 @@ class Elicit:
 
     main_vbox.pack_start(self.notebook, True, True)
     mag_vbox.pack_start(hbox, False)
+    main_vbox.set_spacing(5)
 
 
     pick_view_hbox = gtk.HBox()
@@ -433,8 +451,8 @@ class Elicit:
 
     self.hex_entry = gtk.Entry()
     self.hex_entry.set_max_length(7)
-    # self.hex_entry.set_width_chars(7)
-    table.attach(self.hex_entry,1,4,3,4,gtk.FILL|gtk.EXPAND,0,2,2)
+    self.hex_entry.set_width_chars(7)
+    table.attach(self.hex_entry,1,2,3,4,gtk.FILL|gtk.EXPAND,0,2,2)
     self.h_ids['hex'] = self.hex_entry.connect('changed', self.hex_entry_changed)
 
 
