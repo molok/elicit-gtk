@@ -327,9 +327,9 @@ class Elicit:
     frame_wheel = gtk.Frame()
     self.notebook = gtk.Notebook()
     frame_mag_label = gtk.Image()
-    frame_mag_label.set_from_file(os.path.join(icon_path, "magnify-button.png"));
-    # TODO: Color Wheel image (from Gimp picker?)
-    frame_wheel_label = gtk.Label('Color Wheel')
+    frame_mag_label.set_from_file(os.path.join(icon_path, "magnify-16.png"));
+    frame_wheel_label = gtk.Image()
+    frame_wheel_label.set_from_file(os.path.join(icon_path, "color-wheel-16.png"));
     self.notebook.append_page(frame_mag, frame_mag_label)
     self.notebook.append_page(frame_wheel, frame_wheel_label)
     self.wheel = gtk.HSV()
