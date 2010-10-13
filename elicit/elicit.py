@@ -17,6 +17,7 @@ from palette import Palette
 from color import Color
 from palette_view import PaletteView
 from palette_tools import PaletteList, PaletteCombo
+from colorname import ColorName
 
 if gtk.pygtk_version < (2,0):
   print "PyGtk 2.0 is required."
@@ -384,8 +385,8 @@ class Elicit:
     hbox.pack_end(zoom_label, False)
 
 
-    hbox = gtk.HBox(False, 5)
-    main_vbox.pack_start(hbox, False)
+    vbox = gtk.VBox(False, 5)
+    main_vbox.pack_start(vbox, False)
 
     frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
@@ -399,7 +400,7 @@ class Elicit:
     self.colorspin = {}
     # add RGB spinboxes
     table = gtk.Table(6,4)
-    hbox.pack_start(table, True)
+    vbox.pack_start(table, True)
 
     row = 0
     for type in ("r","g","b"):
@@ -450,6 +451,14 @@ class Elicit:
     self.hex_entry.set_width_chars(7)
     table.attach(self.hex_entry,1,2,3,4,gtk.FILL|gtk.EXPAND,0,2,2)
     self.h_ids['hex'] = self.hex_entry.connect('changed', self.hex_entry_changed)
+
+    name_hbox = gtk.HBox()
+    name_label = gtk.Label("Name")
+    name_hbox.pack_start(name_label, False, False, 2)
+    vbox.pack_start(name_hbox)
+    name_combobox = ColorName('/usr/share/X11/rgb.txt')
+    name_hbox.pack_start(name_combobox, False, False, 2)
+
 
 
     sep = gtk.HSeparator()
