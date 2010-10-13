@@ -136,12 +136,10 @@ class Elicit:
     self.colorspin['s'].set_value(self.color.s)
     self.colorspin['v'].set_value(self.color.v)
 
-    # TODO: I should probably use self.color.{c,m,y,k}
-    c, m, y, k = self.color.cmyk()
-    self.colorspin['c'].set_value(c)
-    self.colorspin['m'].set_value(m)
-    self.colorspin['y'].set_value(y)
-    self.colorspin['k'].set_value(k)
+    self.colorspin['c'].set_value(self.color.c)
+    self.colorspin['m'].set_value(self.color.m)
+    self.colorspin['y'].set_value(self.color.y)
+    self.colorspin['k'].set_value(self.color.k)
 
     self.hex_entry.set_text(self.color.hex())
 
