@@ -122,39 +122,43 @@ class Color(gobject.GObject):
 
     self.set_rgb(r,g,b)
 
-  # TODO: this code is from pychrom, I'm not so sure about its correctness.
   # TODO: I should probably set self.{c,m,y,k}
   def set_cmyk(self, c, m, y, k):
-    d = k / 100.0
-    f = (1.0 - d) / 100.0
+    c = c / 100.
+    m = m / 100.
+    y = y / 100.
+    k = k / 100.
 
-    r = int(255.0 * (1.0 - c * f - d))
-    g = int(255.0 * (1.0 - m * f - d))
-    b = int(255.0 * (1.0 - y * f - d))
+    c = min(1, c * (1 - k) + k)
+    m = min(1, m * (1 - k) + k)
+    y = min(1, y * (1 - k) + k)
+
+    r = round((1. - c) * 255., 0)
+    g = round((1. - m) * 255., 0)
+    b = round((1. - y) * 255., 0)
 
     self.set_rgb(r, g, b)
 
   def cmyk(self):
     r, g, b = self.rgb()
-    f = 1.0/255
-    r *= f
-    g *= f
-    b *= f
-    k = min(1 - r, 1 - g, 1 - b)
-    if k < 1:
-      d = 1 - k
-      c = (d - r) / d
-      m = (d - g) / d
-      y = (d - b) / d
-    else:
-      c = 0
-      m = 0
-      y = 0
+    r = r / 255.
+    g = g / 255.
+    b = b / 255.
 
-    c = int(100 * c)
-    m = int(100 * m)
-    y = int(100 * y)
-    k = int(100 * k)
+    c = 1. - r
+    m = 1. - g
+    y = 1. - b
+
+    k = min(c, m, y)
+
+    if k < 1.:
+        c = round((c - k) / (1. - k) * 100, 0)
+        m = round((m - k) / (1. - k) * 100, 0)
+        y = round((y - k) / (1. - k) * 100, 0)
+        k = round(k * 100, 0)
+    else:
+        c = m = y = 0
+        k = 100
 
     return c, m, y, k
 

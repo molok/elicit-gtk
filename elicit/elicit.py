@@ -29,9 +29,6 @@ except ImportError:
   raise SystemExit
 
 # TODO:
-# CMYK actual code (pychrom)
-# Color Wheel automatic resize
-# Color Wheel tab icon
 # NameThatColor
 # Terminal name
 # Refresh after zoom in/out
