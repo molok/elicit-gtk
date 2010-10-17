@@ -123,11 +123,12 @@ class Elicit:
       self.palette_view.selected.name = color_name_entry.get_text()
 
   def color_changed(self, color):
+
     for type in 'r', 'g', 'b', 'h', 's', 'v', 'c', 'm', 'y', 'k':
       self.colorspin[type].handler_block(self.h_ids[type])
-
     self.hex_entry.handler_block(self.h_ids['hex'])
     self.wheel.handler_block(self.h_ids['wheel'])
+    self.name_combobox.handler_block(self.h_ids['name'])
 
     self.colorspin['r'].set_value(self.color.r)
     self.colorspin['g'].set_value(self.color.g)
@@ -143,6 +144,7 @@ class Elicit:
     self.colorspin['k'].set_value(self.color.k)
 
     self.hex_entry.set_text(self.color.hex())
+    self.name_combobox.select_closest(self.color.r, self.color.g, self.color.b)
 
     h, s, v = color.hsv()
     self.wheel.set_color(h / 360., s, v)
@@ -154,6 +156,7 @@ class Elicit:
       self.colorspin[type].handler_unblock(self.h_ids[type])
     self.hex_entry.handler_unblock(self.h_ids['hex'])
     self.wheel.handler_unblock(self.h_ids['wheel'])
+    self.name_combobox.handler_unblock(self.h_ids['name'])
 
   def color_spin_rgb_changed(self, spin):
     r,g,b = self.color.rgb()
@@ -186,6 +189,11 @@ class Elicit:
     elif spin == self.colorspin['v']:
       v = spin.get_value()
     self.color.set_hsv(h,s,v)
+
+  def name_combobox_changed(self, name_combobox):
+    i = name_combobox.get_active()
+    color = name_combobox.get_model()[i][0]
+    self.color.set_hex(color)
 
   def hex_entry_changed(self, entry):
     text = entry.get_text()
@@ -456,10 +464,12 @@ class Elicit:
     name_label = gtk.Label("Name")
     name_hbox.pack_start(name_label, False, False, 2)
     vbox.pack_start(name_hbox)
-    name_combobox = ColorName('/usr/share/X11/rgb.txt')
-    name_hbox.pack_start(name_combobox, False, False, 2)
-
-
+    vbox.reorder_child(name_hbox, 0)
+    # TODO: do not hardcode tha palette path!
+    # self.name_combobox = ColorName('/usr/share/X11/rgb.txt')
+    self.name_combobox = ColorName('../ntc.txt')
+    self.h_ids['name'] = self.name_combobox.connect('changed', self.name_combobox_changed)
+    name_hbox.pack_start(self.name_combobox, True, True, 2)
 
     sep = gtk.HSeparator()
     main_vbox.pack_start(sep, False)

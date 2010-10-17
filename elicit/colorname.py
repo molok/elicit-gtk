@@ -1,30 +1,40 @@
 import gtk
 import gtk.gdk as gdk
+import gobject
 from os.path import exists
 
 class ColorName(gtk.ComboBox):
+  colors = []
   def __init__(self, name_palette_path, wrap_width=1):
     gtk.ComboBox.__init__(self)
-    liststore = gtk.ListStore(gtk.gdk.Color, str)
+    liststore = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING,
+                              gobject.TYPE_STRING)
     name_palette = self.__load_name_palette(name_palette_path)
     for c in name_palette:
       r, g, b, name = c
-      r, g, b = [x/255.0 for x in (r,g,b)]
-      color = gtk.gdk.Color(r,g,b)
-      liststore.append((color,name))
+      # if the color is light
+      if ((r + g + b) / 3.) < 128.:
+          fg = '#DDDDDD'
+      else:
+          fg = '#222222'
+      bg = "#%02X%02X%02X" % (r, g, b)
+
+      liststore.append((bg, fg, name))
     self.set_model(liststore)
 
-    swatch = gtk.CellRendererText()
-    swatch.set_property("width",40)
-    self.pack_start(swatch,False)
-    self.set_attributes(swatch,background_gdk=0)
+    style = gtk.rc_parse_string('''
+                style "my-style" { GtkComboBox::appears-as-list = 1 }
+                widget "*" style "my-style"
+        ''')
+    self.set_name('mycombo')
+    self.set_style(style)
+    print self
+
+
 
     label = gtk.CellRendererText()
-    label.set_property("xpad",10)
-    # label.set_property('background', '#00b057')
-    self.pack_start(label,True)
-    self.set_attributes(label,text=1)
-
+    self.pack_start(label, True)
+    self.set_attributes(label, background=0, foreground=1, text=2)
     self.set_wrap_width(wrap_width)
     
 
@@ -32,11 +42,27 @@ class ColorName(gtk.ComboBox):
       self.set_active(0)
     self.show_all()
 
+  def select_closest(self, r, g, b):
+    # TODO return if it's a perfect match or not
+    # TODO use kdtree or octree
+    shortest = 0x1000000
+    closest = ""
+    j = 0
+    for i in range(len(self.colors)):
+      vr, vg, vb, name = self.colors[i]
+      d = (r - vr) ** 2 + (g - vg) ** 2 + (b - vb) ** 2
+      if d < shortest:
+        closest = name
+        shortest = d
+        j = i
+    # return closest,j
+    self.set_active(j)
+
   def __load_name_palette(self, name_palette_path):
     if exists(name_palette_path):
       try:
         f = open(name_palette_path,'r')
-        colors = []
+        self.colors = []
         palette = set()
         for l in f:
           foo = l.rstrip().split(None,3)
@@ -48,9 +74,9 @@ class ColorName(gtk.ComboBox):
           k = ':'.join(foo[:3])
           if k not in palette:
             palette.add(k)
-            colors.append(rgb + [name])
+            self.colors.append(rgb + [name])
         f.close()
-        return colors
+        return self.colors
       except IOError as (errno, strerror):
         print "error: failed to open {0}: {1}".format(name_palette_path, strerror)
         return []
