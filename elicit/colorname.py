@@ -2,10 +2,13 @@ import gtk
 import gtk.gdk as gdk
 import gobject
 from os.path import exists
+from find_closest import find_closest
 
 class ColorName(gtk.ComboBox):
   colors = []
+  name_palette_path = None
   def __init__(self, name_palette_path, wrap_width=1):
+    self.name_palette_path = name_palette_path
     gtk.ComboBox.__init__(self)
     liststore = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING,
                               gobject.TYPE_STRING)
@@ -42,7 +45,8 @@ class ColorName(gtk.ComboBox):
       self.set_active(0)
     self.show_all()
 
-  def select_closest(self, r, g, b):
+  # TODO FIXME unused right now
+  def select_closest_no(self, r, g, b):
     # TODO return if it's a perfect match or not
     # TODO use kdtree or octree
     shortest = 0x1000000
@@ -57,6 +61,13 @@ class ColorName(gtk.ComboBox):
         j = i
     # return closest,j
     self.set_active(j)
+
+  def select_closest(self, r, g, b):
+    res = find_closest(self.name_palette_path, r, g, b)
+    if res[-1] == '~':
+      self.set_active(int(res[:-1]))
+    else:
+      self.set_active(int(res))
 
   def __load_name_palette(self, name_palette_path):
     if exists(name_palette_path):
