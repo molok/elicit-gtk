@@ -15,8 +15,12 @@ class ColorName(gtk.ComboBox):
 
     for c in name_palette:
       r, g, b, name = c
+
       # if the color is light
-      if ((r + g + b) / 3.) < 128.:
+      # I know I shouldn't write my own non-standard formula, but this seems to
+      # work better than the ones I tried. Remember kids, our eyes are more
+      # sensitive to green light!
+      if ((r + g * 1.6 + b) / 3.) < 128.:
           fg = '#FFFFFF'
       else:
           fg = '#000000'
@@ -25,8 +29,8 @@ class ColorName(gtk.ComboBox):
       liststore.append((bg, fg, name))
     self.set_model(liststore)
 
-    self.set_name('colorname')
     # show a scrollbar
+    self.set_name('colorname')
     gtk.rc_parse_string('''
                 style "my-style" { GtkComboBox::appears-as-list = 1 }
                 widget "*.colorname" style "my-style"
