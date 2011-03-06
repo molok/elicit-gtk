@@ -124,6 +124,7 @@ class Elicit:
 
   def color_changed(self, color):
 
+    # TODO: FIXME  I think there is a bug in here
     for type in 'r', 'g', 'b', 'h', 's', 'v', 'c', 'm', 'y', 'k':
       self.colorspin[type].handler_block(self.h_ids[type])
     self.hex_entry.handler_block(self.h_ids['hex'])
@@ -145,6 +146,8 @@ class Elicit:
 
     self.hex_entry.set_text(self.color.hex())
     self.name_combobox.select_closest(self.color.r, self.color.g, self.color.b)
+    #gobject.idle_add(self.name_combobox.select_closest,self.color.r, 
+                      #self.color.g, self.color.b)
 
     h, s, v = color.hsv()
     self.wheel.set_color(h / 360., s, v)

@@ -24,7 +24,7 @@ distutils.core.setup(
     author_email=appinfo.author_email,
     url=appinfo.website,
     packages=[appinfo.pkgname],
-    ext_modules = [distutils.core.Extension("find_closest", ["elicit/find_closest.c"])],
+    ext_modules = [distutils.core.Extension("find_closest", ["elicit/find_closest.c"]), distutils.core.Extension("newz", ["elicit/newz.c"])],
     package_data={appinfo.pkgname: ['data/icons/*.png']},
     scripts=['bin/elicit', 'bin/elicit_remote'],
     data_files=[

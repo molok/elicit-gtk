@@ -1,52 +1,61 @@
 import gtk
-import gtk.gdk as gdk
+#import gtk.gdk as gdk
 import gobject
 from os.path import exists
-from find_closest import find_closest
+from find_closest import find_closest_init, find_closest
 
 class ColorName(gtk.ComboBox):
   colors = []
+  colors_s = ''
   name_palette_path = None
-  def __init__(self, name_palette_path, wrap_width=1):
+  def __init__(self, name_palette_path):
     self.name_palette_path = name_palette_path
     gtk.ComboBox.__init__(self)
     liststore = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING,
                               gobject.TYPE_STRING)
     name_palette = self.__load_name_palette(name_palette_path)
+
+    for x in self.colors:
+      self.colors_s += '%d, %d, %d\n' % (x[0], x[1], x[2])
+    find_closest_init(self.colors_s)
+
     for c in name_palette:
       r, g, b, name = c
       # if the color is light
       if ((r + g + b) / 3.) < 128.:
-          fg = '#DDDDDD'
+          fg = '#FFFFFF'
       else:
-          fg = '#222222'
+          fg = '#000000'
       bg = "#%02X%02X%02X" % (r, g, b)
 
       liststore.append((bg, fg, name))
     self.set_model(liststore)
 
-    style = gtk.rc_parse_string('''
+    self.set_name('colorname')
+    # show a scrollbar
+    gtk.rc_parse_string('''
                 style "my-style" { GtkComboBox::appears-as-list = 1 }
-                widget "*" style "my-style"
+                widget "*.colorname" style "my-style"
         ''')
-    self.set_name('mycombo')
-    self.set_style(style)
-    print self
-
-
 
     label = gtk.CellRendererText()
     self.pack_start(label, True)
     self.set_attributes(label, background=0, foreground=1, text=2)
-    self.set_wrap_width(wrap_width)
-    
 
     if len(name_palette) > 0:
       self.set_active(0)
-    self.show_all()
 
-  # TODO FIXME unused right now
-  def select_closest_no(self, r, g, b):
+  def select_closest__(self, r, g, b):
+    pass
+    #import time
+    #x = time.time()
+    #time.sleep(0.003)
+    #print 'it tooks: %.4f' % (time.time() -x )
+
+
+  # This takes about 3ms on my machine
+  def select_closest(self, r, g, b):
+    #print 'IN'
     # TODO return if it's a perfect match or not
     # TODO use kdtree or octree
     shortest = 0x1000000
@@ -62,12 +71,16 @@ class ColorName(gtk.ComboBox):
     # return closest,j
     self.set_active(j)
 
-  def select_closest(self, r, g, b):
-    res = find_closest(self.name_palette_path, r, g, b)
+  def select_closest_(self, r, g, b):
+    #print self.colors_s
+    #import time
+    #x = time.time()
+    res = find_closest(r, g, b)
     if res[-1] == '~':
       self.set_active(int(res[:-1]))
     else:
       self.set_active(int(res))
+    #print 'it tooks: %.4f' % (time.time() -x )
 
   def __load_name_palette(self, name_palette_path):
     if exists(name_palette_path):
