@@ -48,19 +48,25 @@ class ColorName(gtk.ComboBox):
   def select_closest__(self, r, g, b):
     pass
     #import time
+    #from random import randint
     #x = time.time()
+    #self.set_active(randint(0, 10))
     #time.sleep(0.003)
     #print 'it tooks: %.4f' % (time.time() -x )
 
 
   # This takes about 3ms on my machine
   def select_closest(self, r, g, b):
+    #DEBUG
+    #import time
+    #x = time.time()
     #print 'IN'
     # TODO return if it's a perfect match or not
     # TODO use kdtree or octree
     shortest = 0x1000000
     closest = ""
     j = 0
+    #loop = time.time()
     for i in range(len(self.colors)):
       vr, vg, vb, name = self.colors[i]
       d = (r - vr) ** 2 + (g - vg) ** 2 + (b - vb) ** 2
@@ -68,8 +74,12 @@ class ColorName(gtk.ComboBox):
         closest = name
         shortest = d
         j = i
+    #print 'loop: %.4f' % (time.time() -loop )
     # return closest,j
+    #z = time.time()
     self.set_active(j)
+    #print 'set_active: %.4f' % (time.time() -z )
+    #print 'it tooks: %.4f' % (time.time() -x )
 
   def select_closest_(self, r, g, b):
     #print self.colors_s

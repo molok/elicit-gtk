@@ -112,11 +112,16 @@ class Elicit:
     self.palette.remove(color)
 
   def wheel_changed(self, wheel):
+    #import pdb; pdb.set_trace()
+    self.wheel.was_adjusting = self.wheel.is_adjusting()
+    print 'WHEEL wheel.was_adjusting', self.wheel.was_adjusting
     h, s, v = wheel.get_color()
     h = h * 360.
     h_o, s_o, v_o = self.color.hsv()
-    if h_o != h or s_o != s or v_o != v:
-      self.color.set_hsv(h, s, v)
+    # I need Color to emit 'changed' even when it is not changed
+    # because otherwise the wheel doesn't set the color when the user
+    # stops moving the cursor. Yeah, hackish.
+    self.color.set_hsv(h, s, v, do_emit=True)
 
   def color_name_entry_changed(self, color_name_entry):
     if self.palette and self.palette_view.selected:
@@ -145,8 +150,10 @@ class Elicit:
     self.colorspin['k'].set_value(self.color.k)
 
     self.hex_entry.set_text(self.color.hex())
-    self.name_combobox.select_closest(self.color.r, self.color.g, self.color.b)
-    #gobject.idle_add(self.name_combobox.select_closest,self.color.r, 
+    print 'wheel.was_adjusting', self.wheel.was_adjusting
+    if not self.wheel.was_adjusting:
+        self.name_combobox.select_closest(self.color.r, self.color.g, self.color.b)
+        #gobject.idle_add(self.name_combobox.select_closest,self.color.r, 
                       #self.color.g, self.color.b)
 
     h, s, v = color.hsv()
@@ -343,6 +350,7 @@ class Elicit:
     self.notebook.append_page(frame_mag, frame_mag_label)
     self.notebook.append_page(frame_wheel, frame_wheel_label)
     self.wheel = gtk.HSV()
+    self.wheel.was_adjusting = False
     frame_wheel.add(self.wheel)
     self.h_ids['wheel'] = self.wheel.connect('changed', self.wheel_changed)
 
@@ -469,7 +477,7 @@ class Elicit:
     vbox.pack_start(name_hbox)
     vbox.reorder_child(name_hbox, 0)
     # TODO: do not hardcode tha palette path!
-    # self.name_combobox = ColorName('/usr/share/X11/rgb.txt')
+    #self.name_combobox = ColorName('/etc/X11/rgb.txt')
     self.name_combobox = ColorName('../ntc.txt')
     self.h_ids['name'] = self.name_combobox.connect('changed', self.name_combobox_changed)
     name_hbox.pack_start(self.name_combobox, True, True, 2)

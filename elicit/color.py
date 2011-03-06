@@ -85,7 +85,7 @@ class Color(gobject.GObject):
     """
     self.set_rgb(r/256, g/256, b/256)
 
-  def set_hsv(self, h, s, v):
+  def set_hsv(self, h, s, v, do_emit=False):
     """
     Set the color value in HSV format
 
@@ -97,7 +97,11 @@ class Color(gobject.GObject):
     if min(h,s,v) < 0 or max(s,v) > 1 or h > 360:
       raise ValueError("Hue must be between 0 and 360. Sat. and Val. must be between 0 and 1")
 
-    if self.h == h and self.s == s and self.v == v: return
+    if self.h == h and self.s == s and self.v == v: 
+      if do_emit:
+        self.emit('changed')
+      else:
+        return
 
     self.h, self.s, self.v = h, s, v
     self.type = Color.HSV
