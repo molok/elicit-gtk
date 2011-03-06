@@ -16,11 +16,8 @@ class ColorName(gtk.ComboBox):
     for c in name_palette:
       r, g, b, name = c
 
-      # if the color is light
-      # I know I shouldn't write my own non-standard formula, but this seems to
-      # work better than the ones I tried. Remember kids, our eyes are more
-      # sensitive to green light!
-      if ((r + g * 1.6 + b) / 3.) < 128.:
+      # if the color is light (RGB Luminance formula)
+      if (r * 0.3 + g * 0.59 + b * 0.11) < 127.5:
           fg = '#FFFFFF'
       else:
           fg = '#000000'
