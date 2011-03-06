@@ -112,12 +112,9 @@ class Elicit:
     self.palette.remove(color)
 
   def wheel_changed(self, wheel):
-    #import pdb; pdb.set_trace()
     self.wheel.was_adjusting = self.wheel.is_adjusting()
-    print 'WHEEL wheel.was_adjusting', self.wheel.was_adjusting
     h, s, v = wheel.get_color()
     h = h * 360.
-    h_o, s_o, v_o = self.color.hsv()
     # I need Color to emit 'changed' even when it is not changed
     # because otherwise the wheel doesn't set the color when the user
     # stops moving the cursor. Yeah, hackish.
@@ -150,11 +147,8 @@ class Elicit:
     self.colorspin['k'].set_value(self.color.k)
 
     self.hex_entry.set_text(self.color.hex())
-    print 'wheel.was_adjusting', self.wheel.was_adjusting
     if not self.wheel.was_adjusting:
         self.name_combobox.select_closest(self.color.r, self.color.g, self.color.b)
-        #gobject.idle_add(self.name_combobox.select_closest,self.color.r, 
-                      #self.color.g, self.color.b)
 
     h, s, v = color.hsv()
     self.wheel.set_color(h / 360., s, v)
@@ -570,7 +564,6 @@ class Elicit:
     self.wheel.set_metrics(int(size), int(size / 10))
 
   def wheel_size_request(self, frame, requisition):
-    style = frame.get_style()
     focus_width = frame.style_get_property('focus-line-width')
     focus_padding = frame.style_get_property('focus-padding')
     requisition.width = 2 * (focus_width + focus_padding)
