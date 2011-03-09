@@ -12,6 +12,29 @@ if gtk.pygtk_version < (2,0):
   print "PyGtk 2.0 is required."
   raise SystemExit
 
+class FakeColor:
+  def __init__(self, r, g, b):
+    self.r = r
+    self.g = g
+    self.b = b
+
+  def rgb(self):
+    return (self.r, self.g, self.b)
+
+  def rgb16(self):
+    return (self.r * 257, self.g * 257, self.b * 257)
+
+  def hex(self, uppercase=False, hash=True):
+    if uppercase:
+      format = "%02X%02X%02X"
+    else:
+      format = "%02x%02x%02x"
+    if hash: format = "#" + format
+    return format % (self.r, self.g, self.b)
+
+  def set_rgb(self, r, g, b):
+    self.r, self.g, self.b = r, g, b
+
 class ColorPicker(gtk.Widget):
   """
   A widget to select colors from the screen
@@ -40,6 +63,8 @@ class ColorPicker(gtk.Widget):
     self.picking = 0
     self.pick_timeout = None
     self.save_on_release = False
+    self.colorname = FakeColor(0, 0, 0)
+    self.square = {}
 
   def set_magnifier(self, mag):
     """
@@ -116,7 +141,13 @@ class ColorPicker(gtk.Widget):
 
   def cb_drag_get_color(self):
     """ Drag get color callback """
-    return self.color
+    if (self.pick_x >= self.square['x'] and
+        self.pick_x <= self.square['x'] + self.square['w'] and
+        self.pick_y >= self.square['y'] and
+        self.pick_y <= self.square['y'] + self.square['h']):
+      return self.colorname
+    else:
+      return self.color
 
   def pick(self, x, y, magnifier = False):
     """
@@ -149,8 +180,16 @@ class ColorPicker(gtk.Widget):
   def cb_button_press(self, widget, event):
     """ Callback for mouse button press events """
     if (event.button == 1):
+      self.pick_x = event.x
+      self.pick_y = event.y
       if self.picking:
         self.pick_stop()
+      elif (event.x >= self.square['x'] and
+            event.x <= self.square['x'] + self.square['w'] and
+            event.y >= self.square['y'] and
+            event.y <= self.square['y'] + self.square['h']):
+        #TODO
+        pass
       else:
         self.save_on_release = True
 
@@ -220,6 +259,7 @@ class ColorPicker(gtk.Widget):
     self.style.set_background(self.window, gtk.STATE_NORMAL)
     self.window.move_resize(*self.allocation)
     self.gc = self.window.new_gc()
+    self.gc_name = self.window.new_gc()
     self.color_changed(self.color)
 
     pbuf = gdk.pixbuf_new_from_file(os.path.join(self.icon_path, "dropper.png"))
@@ -253,15 +293,41 @@ class ColorPicker(gtk.Widget):
     if self.flags() & gtk.REALIZED:
       self.window.move_resize(*allocation)
 
+  def colorname_changed(self, widget, color_dict):
+    r, g, b, = color_dict['r'], color_dict['g'], color_dict['b']
+    self.colorname.set_rgb(r, g, b)
+    self.queue_draw()
+
   def do_expose_event(self, event):
     """
     Draw the widget
 
     Just a big rectangle of the currently selected color
     """
-    self.window.draw_rectangle(self.gc, True, 
+    self.window.draw_rectangle(self.gc, True,
         event.area.x, event.area.y,
         event.area.width, event.area.height)
+
+    self.gc_name = self.window.new_gc()
+    #r, g, b = 91 * 256, 202 * 256, 0
+    r, g, b = self.colorname.rgb()
+    r = r * 256
+    g = g * 256
+    b = b * 256
+    square = self.square
+    square['w'] = square['h'] = int(event.area.height - (2 * event.area.height * 0.2))
+    square['x'] = int(event.area.x + event.area.width - square['w'] - (event.area.height * 0.2))
+    square['y'] = int(event.area.y + event.area.height - square['h'] - (event.area.height * 0.2))
+    col = self.gc_name.get_colormap().alloc_color(r, g, b, False, False)
+    self.gc_name.set_foreground(col)
+    self.window.draw_rectangle(self.gc_name, True, square['x'], square['y'], square['w'], square['h'])
+
+    gc_border = self.window.new_gc()
+    r, g, b = 65535, 65535, 65535
+    col = gc_border.get_colormap().alloc_color(r, g, b, False, False)
+    gc_border.set_foreground(col)
+    self.window.draw_rectangle(gc_border, False, square['x'], square['y'], square['w'], square['h'])
+
 
 gobject.type_register(ColorPicker)
 

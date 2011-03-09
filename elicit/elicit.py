@@ -17,7 +17,7 @@ from palette import Palette
 from color import Color
 from palette_view import PaletteView
 from palette_tools import PaletteList, PaletteCombo
-from colorname import ColorName
+from colorname import ColorName, NamePalette, ColorLabel
 
 if gtk.pygtk_version < (2,0):
   print "PyGtk 2.0 is required."
@@ -30,12 +30,12 @@ except ImportError:
   raise SystemExit
 
 # TODO:
-# NameThatColor
-# Terminal name
-# Refresh after zoom in/out
-# tab order
-# it's hard to use right click with a touchpad with
-# only one button!
+# [/] NameThatColor
+# [ ] Terminal name
+# [ ] Refresh after zoom in/out
+# [ ] tab order
+# [ ] it's hard to use right click with a touchpad with
+#     only one button!
 
 class Elicit:
 
@@ -131,7 +131,7 @@ class Elicit:
       self.colorspin[type].handler_block(self.h_ids[type])
     self.hex_entry.handler_block(self.h_ids['hex'])
     self.wheel.handler_block(self.h_ids['wheel'])
-    self.name_combobox.handler_block(self.h_ids['name'])
+    #self.name_combobox.handler_block(self.h_ids['name'])
 
     self.colorspin['r'].set_value(self.color.r)
     self.colorspin['g'].set_value(self.color.g)
@@ -148,7 +148,7 @@ class Elicit:
 
     self.hex_entry.set_text(self.color.hex())
     if not self.wheel.was_adjusting:
-        self.name_combobox.select_closest(self.color.r, self.color.g, self.color.b)
+        self.name_palette.closest(self.color.r, self.color.g, self.color.b)
 
     h, s, v = color.hsv()
     self.wheel.set_color(h / 360., s, v)
@@ -160,7 +160,7 @@ class Elicit:
       self.colorspin[type].handler_unblock(self.h_ids[type])
     self.hex_entry.handler_unblock(self.h_ids['hex'])
     self.wheel.handler_unblock(self.h_ids['wheel'])
-    self.name_combobox.handler_unblock(self.h_ids['name'])
+    #self.name_combobox.handler_unblock(self.h_ids['name'])
 
   def color_spin_rgb_changed(self, spin):
     r,g,b = self.color.rgb()
@@ -343,6 +343,22 @@ class Elicit:
     frame_wheel.connect('size-request', self.wheel_size_request)
     self.notebook.append_page(frame_mag, frame_mag_label)
     self.notebook.append_page(frame_wheel, frame_wheel_label)
+
+    # TODO: do not hardcode tha palette path!
+    #self.name_palette = NamePalette('../ntc.txt', self.color)
+    self.name_palette = NamePalette('/etc/X11/rgb.txt', self.color)
+    self.name_treeview = ColorName(self.name_palette)
+    #self.h_ids['name'] = self.name_combobox.connect('changed', self.name_combobox_changed)
+    #name_hbox.pack_start(self.name_combobox, True, True, 2)
+
+    frame_name_palette = gtk.Frame()
+    frame_name_palette_label = gtk.Image()
+    frame_name_palette_label.set_from_file(os.path.join(icon_path, "palette-16.png"));
+    self.notebook.append_page(frame_name_palette, frame_name_palette_label)
+    name_scroll = gtk.ScrolledWindow()
+    name_scroll.add(self.name_treeview)
+    frame_name_palette.add(name_scroll)
+
     self.wheel = gtk.HSV()
     self.wheel.was_adjusting = False
     frame_wheel.add(self.wheel)
@@ -409,6 +425,7 @@ class Elicit:
     frame.add(self.colorpicker)
     self.colorpicker.connect('save-color', self.picker_save_color)
     self.colorpicker.set_magnifier(self.mag)
+    self.name_palette.connect('colorname-changed', self.colorpicker.colorname_changed)
 
     self.colorspin = {}
     # add RGB spinboxes
@@ -466,15 +483,11 @@ class Elicit:
     self.h_ids['hex'] = self.hex_entry.connect('changed', self.hex_entry_changed)
 
     name_hbox = gtk.HBox()
-    name_label = gtk.Label("Name")
-    name_hbox.pack_start(name_label, False, False, 2)
+    self.name_label = ColorLabel()
+    self.name_palette.connect('colorname-changed', self.name_label.colorname_changed)
+    name_hbox.pack_end(self.name_label, False, False, 2)
     vbox.pack_start(name_hbox)
     vbox.reorder_child(name_hbox, 0)
-    # TODO: do not hardcode tha palette path!
-    #self.name_combobox = ColorName('/etc/X11/rgb.txt')
-    self.name_combobox = ColorName('../ntc.txt')
-    self.h_ids['name'] = self.name_combobox.connect('changed', self.name_combobox_changed)
-    name_hbox.pack_start(self.name_combobox, True, True, 2)
 
     sep = gtk.HSeparator()
     main_vbox.pack_start(sep, False)
