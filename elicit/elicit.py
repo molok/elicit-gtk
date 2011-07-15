@@ -30,8 +30,10 @@ except ImportError:
   raise SystemExit
 
 # TODO:
-# [/] NameThatColor
-# [ ] Terminal name
+# [X] NameThatColor
+# [/] Terminal name
+# [ ] remove dead code
+# [ ] implement a Color that doesn't emit anything (to replace FakeColor)
 # [ ] Refresh after zoom in/out
 # [ ] tab order
 # [ ] it's hard to use right click with a touchpad with
@@ -345,8 +347,11 @@ class Elicit:
     self.notebook.append_page(frame_wheel, frame_wheel_label)
 
     # TODO: do not hardcode tha palette path!
+#
+    self.name_palette = NamePalette('/home/alebolo/Projects/elicit/elicit-molok-github/ntc.txt',
+            self.color)
     #self.name_palette = NamePalette('../ntc.txt', self.color)
-    self.name_palette = NamePalette('/etc/X11/rgb.txt', self.color)
+    #self.name_palette = NamePalette('/etc/X11/rgb.txt', self.color)
     self.name_treeview = ColorName(self.name_palette)
     #self.h_ids['name'] = self.name_combobox.connect('changed', self.name_combobox_changed)
     #name_hbox.pack_start(self.name_combobox, True, True, 2)
